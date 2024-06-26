@@ -1,21 +1,32 @@
 version: '3'
 
 services:
-###> doctrine/doctrine-bundle ###
+##> doctrine/doctrine-bundle ###
+#  app:
+#    image: php8.2-fpm
+#    volumes:
+#      - .:/var/www/html
+#    working_dir: /var/www/html
+#    environment:
+#      - DATABASE_URL=mysql://root:@127.0.0.1:3306/app?serverVersion=10.4.32-MariaDB-1:10.4.32+maria~ubu2004-log&charset=utf8mb4
+#    depends_on:
+#      - database
+#      -
   database:
-    image: postgres:${POSTGRES_VERSION:-16}-alpine
+    image: mariadb:10.4
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-app}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
       # You should definitely change the password in production
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-!ChangeMe!}
-      POSTGRES_USER: ${POSTGRES_USER:-app}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     healthcheck:
-      test: ["CMD", "pg_isready", "-d", "${POSTGRES_DB:-app}", "-U", "${POSTGRES_USER:-app}"]
+      test: ["CMD", "mysqladmin", "ping", "-u", "${MYSQL_USER:-app}", "--password=${MYSQL_PASSWORD:-!ChangeMe!}"]
       timeout: 5s
       retries: 5
       start_period: 60s
     volumes:
-      - database_data:/var/lib/postgresql/data:rw
+      -  database_data:/var/lib/mysql:rw
       # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
       # - ./docker/db/data:/var/lib/postgresql/data:rw
 ###< doctrine/doctrine-bundle ###
