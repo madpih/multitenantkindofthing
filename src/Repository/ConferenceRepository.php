@@ -16,7 +16,22 @@ class ConferenceRepository extends ServiceEntityRepository
         parent::__construct($registry, Conference::class);
     }
 
-//    /**
+    public function findAll():array
+    {
+      return $this->findby([], ['year' => 'ASC', 'city' => 'ASC']);
+    }
+
+  public function findOneBySlug(string $slug): ?Conference
+  {
+    return $this->createQueryBuilder('c')
+      ->andWhere('c.slug = :slug')
+      ->setParameter('slug', $slug)
+      ->getQuery()
+      ->getOneOrNullResult();
+  }
+
+
+  //    /**
 //     * @return Conference[] Returns an array of Conference objects
 //     */
 //    public function findByExampleField($value): array
