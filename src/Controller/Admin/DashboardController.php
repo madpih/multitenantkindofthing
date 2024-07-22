@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Entity\Conference;
 use App\Entity\Comment;
+use App\Entity\TodoList;
 use EasyCorp\Bundle\EasyAdminBundle\Router\AdminUrlGenerator;
 
 class DashboardController extends AbstractDashboardController
@@ -34,5 +35,8 @@ class DashboardController extends AbstractDashboardController
         yield MenuItem::linkToRoute('Back to the website', 'fa fa-home','homepage');
         yield MenuItem::linkToCrud('Conferences', 'fas fa-map-market-alt', Conference::class);
         yield MenuItem::linkToCrud('Comments', 'fas fa-comments',Comment::class);
+        yield MenuItem::linkToCrud('ToDo List', 'fas fa-list-ul',TodoList::class);
+
     }
+
 }

@@ -3,6 +3,8 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Comment;
+use App\Entity\Conference;
+use Doctrine\ORM\EntityManagerInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
@@ -15,6 +17,9 @@ use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
 
 class CommentCrudController extends AbstractCrudController
 {
+
+  public function __construct(private readonly EntityManagerInterface $entityManager) {}
+
   public static function getEntityFqcn(): string
   {
     return Comment::class;
@@ -27,6 +32,9 @@ class CommentCrudController extends AbstractCrudController
       ->setEntityLabelInPlural('Conference Comments')
       ->setSearchFields(['author', 'text', 'email'])
       ->setDefaultSort(['createdAt' => 'DESC'])
+      ->setPaginatorPageSize(10)
+      ->setPaginatorRangeSize(4)
+
       ;
   }
 

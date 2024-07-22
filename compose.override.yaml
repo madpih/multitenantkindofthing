@@ -1,6 +1,12 @@
 version: '3'
 
 services:
+  web:
+    build:
+      args:
+        PHP_EXTENSIONS: |
+          pdo_mysql
+
 ###> doctrine/doctrine-bundle ###
   database:
     ports:
@@ -10,10 +16,14 @@ services:
 ###> symfony/mailer ###
   mailer:
     image: axllent/mailpit
+    container_name: mailpit
+    restart: unless-stopped
     ports:
-      - "1025"
-      - "8025"
+      - 8025:8025
+      - 1025:1025
     environment:
       MP_SMTP_AUTH_ACCEPT_ANY: 1
       MP_SMTP_AUTH_ALLOW_INSECURE: 1
+
 ###< symfony/mailer ###
+

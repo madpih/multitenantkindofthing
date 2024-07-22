@@ -1,22 +1,54 @@
-version: '3'
+#version: '3.7'
+#
+#services:
+#  database:
+#    image: mariadb:10.6
+#    environment:
+#      MYSQL_DATABASE: ${MYSQL_DATABASE}
+#      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+#      MYSQL_USER: ${MYSQL_USER}
+#      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+#
+#    healthcheck:
+#      test: ["CMD", "mysqladmin", "ping", "-u", "${MYSQL_USER:-app}", "--password=${MYSQL_PASSWORD:-!ChangeMe!}"]
+#      timeout: 5s
+#      retries: 5
+#      start_period: 60s
+#    volumes:
+#      - database_data:/var/lib/mysql:rw
+#    networks:
+#      - ddev_default
+#
+#volumes:
+#  database_data:
+#
+version: '3.7'
 
 services:
-##> doctrine/doctrine-bundle ###
-#  app:
-#    image: php8.2-fpm
-#    volumes:
-#      - .:/var/www/html
-#    working_dir: /var/www/html
-#    environment:
-#      - DATABASE_URL=mysql://root:@127.0.0.1:3306/app?serverVersion=10.4.32-MariaDB-1:10.4.32+maria~ubu2004-log&charset=utf8mb4
-#    depends_on:
-#      - database
-#      -
+  backend:
+    image: ddev/php-fpm:8.2
+    volumes:
+      - "../guestbook:/var/www/html"
+    ports:
+      - "8000:80"  # Exposing port 8000 on localhost to port 80 in the container
+    networks:
+      - ddev_default
+
+  frontend:
+    image: node:22.4  # Using Node.js 22.4 as specified
+    command: npm run start
+    working_dir: /app
+    volumes:
+      - "../spa:/app"
+    ports:
+      - "3000:3000"  # Exposing port 3000 for frontend
+    networks:
+      - ddev_default
+
   database:
-    image: mariadb:10.4
+    image: mariadb:10.6
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
-      # You should definitely change the password in production
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
@@ -26,12 +58,12 @@ services:
       retries: 5
       start_period: 60s
     volumes:
-      -  database_data:/var/lib/mysql:rw
-      # You may use a bind-mounted host directory instead, so that it is harder to accidentally remove the volume and lose all your data!
-      # - ./docker/db/data:/var/lib/postgresql/data:rw
-###< doctrine/doctrine-bundle ###
+      - database_data:/var/lib/mysql:rw
+    networks:
+      - ddev_default
+
+networks:
+  ddev_default:
 
 volumes:
-###> doctrine/doctrine-bundle ###
   database_data:
-###< doctrine/doctrine-bundle ###

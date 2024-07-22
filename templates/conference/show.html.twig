@@ -1,35 +1,121 @@
 {% extends 'base.html.twig' %}
 
-{% block title %} Conference Guestbook - {{ conference }}{%  endblock %}
+{% block title %}Conference Guestbook - {{ conference }}{% endblock %}
 
 {% block body %}
-    <h2>{{ conference }} Conference</h2>
 
-    {% if comments|length > 0 %}
-        <div>There are {{ comments|length }} comments.</div>
-        {%  for comment in comments %}
-            {%  if comment.photofilename %}
-                <img src="{{ asset('uploads/photos/' ~ comment.photofilename) }}" style="max-width: 200px" />
-            {% endif %}
+    {%  for message in app.flashes('notification')  %}
+        <div class="alert alert-info alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+        </div>
+    {% endfor %}
 
-            <h4>{{ comment.author }}</h4>
-            <small>
-                {{ comment.createdAt|format_datetime('medium', 'short')}}
-            </small>
+    <h2 class="mb-5">
+        {{ conference }} Conference
+    </h2>
 
-            <p>{{ comment.text }}</p>
-        {%  endfor %}
-        {% if previous >= 0 %}
-            <a href="{{ path('conference', { slug: conference.slug, offset: previous }) }}">Previous</a>
-        {% endif %}
-        {% if next < comments|length %}
-            <a href="{{ path('conference', { slug: conference.slug, offset: next }) }}">Next</a>
-        {% endif %}
-    {% else %}
-        <div>No comments have been posted yet for this conference.</div>
-    {%  endif %}
+    <div class="row">
+        <div class="col-12 col-lg-7">
+            <div class="row">
+                <div class="col-12">
+                    {% if comments|length > 0 %}
+                        {% for comment in comments %}
+                            <div class="media shadow border rounded-3 p-3 mb-4">
+                                <div class="comment-img me-3">
+                                    {% if comment.photofilename %}
+                                        <a href="{{ asset('uploads/photos/' ~ comment.photofilename) }}" target="_blank">
+                                            <img src="{{ asset('uploads/photos/' ~ comment.photofilename) }}" />
+                                        </a>
+                                    {% endif %}
+                                </div>
 
-    <h2>Add your own feedback</h2>
-    {{ form(comment_form) }}
+                                <div class="media-body">
+                                    <h4 class="font-weight-light mb-0">
+                                        {{ comment.author }}
+                                    </h4>
+
+                                    <div class="mb-2">
+                                        <small class="text-muted text-uppercase">
+                                            {{ comment.createdAt|format_datetime('medium', 'short') }}
+                                        </small>
+                                    </div>
+
+                                    <div class="comment-text">
+                                        {{ comment.text|nl2br }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+
+        {#                <div>There are {{ comments|length }} comments.</div>#}
+                        <div>{{ 'nb_of_comments'|trans({count: comments|length}) }}</div>
+                        {% if previous >= 0 %}
+                            <a href="{{ path('conference', { slug: conference.slug, offset: previous }) }}">Previous</a>
+                        {% endif %}
+                        {% if next < comments|length %}
+                            <a href="{{ path('conference', { slug: conference.slug, offset: next }) }}">Next</a>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center">
+                            No comments have been posted yet for this conference.
+                        </div>
+                    {% endif %}
+                    </div>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="bg-light shadow border rounded-3 p-4">
+                        <h3 class="font-weight-light">
+                            Add your own feedback
+                        </h3>
+                        {{ form(comment_form) }}
+                    </div>
+                </div>
+            </div>
+    </div>
+        <div class="col-12 col-lg-5">
+            <div class="row">
+                <div class="col-12">
+                    <div class="media shadow border rounded-3 p-3 mb-4">
+                        <h2 class="mb-3">
+                            {{ 'todo_list_for_conference'|trans({'{conference}': conference}) }}
+                        </h2>
+                    {% if todos|length > 0 %}
+                        {% for todo in todos %}
+                                <div class="media shadow border rounded-3 p-3 mb-4">
+                                    <h4 class="font-weight-light">
+                                        {{ todo.task }}
+                                    </h4>
+
+                                    <p class="font-weight-light pt-3">
+                                        {{ todo.description }}
+                                    </p>
+                                </div>
+
+                        {% endfor %}
+
+                    {% else %}
+                        <div class="text-center">
+                            No tasks todo have been posted yet for this conference.
+                        </div>
+                    {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="bg-light shadow border rounded-3 p-4">
+                        <h3 class="font-weight-light">
+                            ADD TODO
+                        </h3>
+                        {{ form(add_todo_form) }}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
 {% endblock %}
-
