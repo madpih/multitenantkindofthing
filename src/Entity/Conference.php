@@ -23,169 +23,155 @@ use Symfony\Component\String\Slugger\SluggerInterface;
   order: ['year' => 'DESC', 'city' => 'ASC'],
   paginationEnabled: false,
 )]
-class Conference
-{
-    #[ORM\Id]
-    #[ORM\GeneratedValue]
-    #[ORM\Column]
-    #[Groups(['conference:list','conference:item'])]
-    private ?int $id = null;
+class Conference {
 
-    #[ORM\Column(length: 255)]
-    #[Groups(['conference:list', 'conference:item'])]
-    private ?string $city = null;
+  #[ORM\Id]
+  #[ORM\GeneratedValue]
+  #[ORM\Column]
+  #[Groups(['conference:list', 'conference:item'])]
+  private ?int $id = NULL;
 
-    #[ORM\Column(length: 4)]
-    #[Groups(['conference:list', 'conference:item'])]
-    private ?string $year = null;
+  #[ORM\Column(length: 255)]
+  #[Groups(['conference:list', 'conference:item'])]
+  private ?string $city = NULL;
 
-    #[ORM\Column]
-    #[Groups(['conference:list', 'conference:item'])]
-    private ?bool $isInternational = null;
+  #[ORM\Column(length: 4)]
+  #[Groups(['conference:list', 'conference:item'])]
+  private ?string $year = NULL;
 
-    #[ORM\Column(length: 255, unique: true )]
-    #[Groups(['conference:list', 'conference:item'])]
-    private ?string $slug = null;
+  #[ORM\Column]
+  #[Groups(['conference:list', 'conference:item'])]
+  private ?bool $isInternational = NULL;
 
-    /**
-     * @var Collection<int, Comment>
-     */
-    #[ORM\OneToMany(targetEntity: Comment::class, mappedBy: 'conference', orphanRemoval: true)]
-    private Collection $comments;
+  #[ORM\Column(length: 255, unique: TRUE)]
+  #[Groups(['conference:list', 'conference:item'])]
+  private ?string $slug = NULL;
 
+  /**
+   * @var Collection<int, Comment>
+   */
+  #[ORM\OneToMany(targetEntity: Comment::class, mappedBy: 'conference', orphanRemoval: TRUE)]
+  private Collection $comments;
 
-    /**
-     * @var Collection<int, TodoList>
-     */
-    #[ORM\OneToMany(targetEntity: TodoList::class, mappedBy: 'conference', orphanRemoval: true)]
-    private Collection $todolist;
+  /**
+   * @var Collection<int, TodoList>
+   */
+  #[ORM\OneToMany(targetEntity: TodoList::class, mappedBy: 'conference', orphanRemoval: TRUE)]
+  private Collection $todolist;
 
-    public function __construct()
-    {
-        $this->comments = new ArrayCollection();
-        $this->todolist = new ArrayCollection();
+  public function __construct() {
+    $this->comments = new ArrayCollection();
+    $this->todolist = new ArrayCollection();
+  }
+
+  public function __toString(): string {
+    return $this->city . ' ' . $this->year;
+  }
+
+  public function getId(): ?int {
+    return $this->id;
+  }
+
+  public function computeSlug(SluggerInterface $slugger): void {
+    if (!$this->slug || '-' === $this->slug) {
+      $this->slug = (string) $slugger->slug((string) $this)->lower();
+    }
+  }
+
+  public function getCity(): ?string {
+    return $this->city;
+  }
+
+  public function setCity(string $city): static {
+    $this->city = $city;
+
+    return $this;
+  }
+
+  public function getYear(): ?string {
+    return $this->year;
+  }
+
+  public function setYear(string $year): static {
+    $this->year = $year;
+
+    return $this;
+  }
+
+  public function isInternational(): ?bool {
+    return $this->isInternational;
+  }
+
+  public function setIsInternational(bool $isInternational): static {
+    $this->isInternational = $isInternational;
+
+    return $this;
+  }
+
+  /**
+   * @return Collection<int, Comment>
+   */
+  public function getComments(): Collection {
+    return $this->comments;
+  }
+
+  public function addComment(Comment $comment): static {
+    if (!$this->comments->contains($comment)) {
+      $this->comments->add($comment);
+      $comment->setConference($this);
     }
 
-    public function __toString(): string
-    {
-      return $this->city . ' ' . $this->year;
-    }
+    return $this;
+  }
 
-    public function getId(): ?int
-    {
-        return $this->id;
-    }
-
-    public function computeSlug(SluggerInterface $slugger): void {
-      if (!$this->slug || '-' === $this->slug ) {
-        $this->slug = (string) $slugger->slug((string) $this)->lower();
+  public function removeComment(Comment $comment): static {
+    if ($this->comments->removeElement($comment)) {
+      // set the owning side to null (unless already changed)
+      if ($comment->getConference() === $this) {
+        $comment->setConference(NULL);
       }
     }
-    public function getCity(): ?string
-    {
-        return $this->city;
-    }
+    return $this;
+  }
 
-    public function setCity(string $city): static
-    {
-        $this->city = $city;
+  public function getSlug(): ?string {
+    return $this->slug;
+  }
 
-        return $this;
-    }
+  public function setSlug(string $slug): static {
+    $this->slug = $slug;
 
-    public function getYear(): ?string
-    {
-        return $this->year;
-    }
+    return $this;
+  }
 
-    public function setYear(string $year): static
-    {
-        $this->year = $year;
+  /**
+   * @return Collection<int, TodoList>
+   */
+  public function getTodoList(): Collection {
+    return $this->todolist;
+  }
 
-        return $this;
-    }
-
-    public function isInternational(): ?bool
-    {
-        return $this->isInternational;
-    }
-
-    public function setIsInternational(bool $isInternational): static
-    {
-        $this->isInternational = $isInternational;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, Comment>
-     */
-    public function getComments(): Collection
-    {
-        return $this->comments;
-    }
-
-    public function addComment(Comment $comment): static
-    {
-        if (!$this->comments->contains($comment)) {
-            $this->comments->add($comment);
-            $comment->setConference($this);
-        }
-
-        return $this;
-    }
-
-    public function removeComment(Comment $comment): static
-    {
-        if ($this->comments->removeElement($comment)) {
-            // set the owning side to null (unless already changed)
-            if ($comment->getConference() === $this) {
-                $comment->setConference(null);
-            }
-        }
-
-        return $this;
-    }
-
-    public function getSlug(): ?string
-    {
-        return $this->slug;
-    }
-
-    public function setSlug(string $slug): static
-    {
-        $this->slug = $slug;
-
-        return $this;
-    }
-
-    /**
-     * @return Collection<int, TodoList>
-     */
-    public function getTodoitems(): Collection
-    {
-        return $this->todoitems;
-    }
-
-    public function addTodoitem(TodoList $todoitem): static
-    {
-        if (!$this->todoitems->contains($todoitem)) {
-            $this->todoitems->add($todoitem);
-            $todoitem->setConference($this);
-        }
-
-        return $this;
-    }
-
-    public function removeTodoitem(TodoList $todoitem): static
-    {
-        if ($this->todoitems->removeElement($todoitem)) {
-            // set the owning side to null (unless already changed)
-            if ($todoitem->getConference() === $this) {
-                $todoitem->setConference(null);
-            }
-        }
-
-        return $this;
-    }
 }
+//
+//    public function addTodoList(TodoList $todolist): static
+//    {
+//        if (!$this->todolist->contains($todolist)) {
+//            $this->todolist>add($todolist);
+//            $todolist->setConference($this);
+//        }
+//
+//        return $this;
+//    }
+//
+//    public function removeTodoList(TodoList $todolist): static
+//    {
+//        if ($this->todolist->removeElement($todolist)) {
+//            // set the owning side to null (unless already changed)
+//            if ($todolist->getConference() === $this) {
+//                $todolist->setConference(null);
+//            }
+//        }
+//
+//        return $this;
+//    }
+//}

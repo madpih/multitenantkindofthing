@@ -17,8 +17,8 @@ class TaskType extends AbstractType
 //          ->add('conference')
           ->add('Task')
           ->add('description')
-          ->add('save', SubmitType::class)
-        ;
+          ->add('save', SubmitType::class);
+
     }
 
     public function configureOptions(OptionsResolver $resolver): void

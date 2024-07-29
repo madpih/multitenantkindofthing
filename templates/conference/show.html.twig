@@ -75,6 +75,7 @@
                 </div>
             </div>
     </div>
+        {% if is_granted('ROLE_ADMIN') %}
         <div class="col-12 col-lg-5">
             <div class="row">
                 <div class="col-12">
@@ -82,25 +83,23 @@
                         <h2 class="mb-3">
                             {{ 'todo_list_for_conference'|trans({'{conference}': conference}) }}
                         </h2>
-                    {% if todos|length > 0 %}
-                        {% for todo in todos %}
-                                <div class="media shadow border rounded-3 p-3 mb-4">
+                        {% if todos|length > 0 %}
+                            {% for todo in todos %}
+                                <div class="media shadow border rounded-3 p-3 mb-4" data-todo-id="{{ todo.id }}" data-conference-id="{{ conference.id }}">
                                     <h4 class="font-weight-light">
                                         {{ todo.task }}
                                     </h4>
-
                                     <p class="font-weight-light pt-3">
                                         {{ todo.description }}
                                     </p>
+                                    <button type="button" class="remove-todo btn-danger btn">Complete Todo</button>
                                 </div>
-
-                        {% endfor %}
-
-                    {% else %}
-                        <div class="text-center">
-                            No tasks todo have been posted yet for this conference.
-                        </div>
-                    {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <div class="text-center">
+                                No tasks todo have been posted yet for this conference.
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -114,8 +113,43 @@
                         {{ form(add_todo_form) }}
                     </div>
                 </div>
-
             </div>
         </div>
     </div>
+    {% endif %}
+
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // Attach event listeners to your todo item delete buttons
+        document.querySelectorAll('.remove-todo').forEach(button => {
+          button.addEventListener('click', function() {
+            const todoItem = this.closest('[data-todo-id]');
+            const todoId = todoItem.dataset.todoId;
+            const conferenceId = todoItem.dataset.conferenceId;
+
+            fetch(`/conference/${conferenceId}/todo/${todoId}/remove`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest', // This header is often used to indicate AJAX requests
+              }
+            })
+              .then(response => response.json())
+              .then(data => {
+                if (data.status === 'success') {
+                  // Handle success: remove the todo item from the DOM
+                  todoItem.remove();
+                } else {
+                  // Handle error
+                  alert(data.message);
+                }
+              })
+              .catch(error => console.error('Error:', error));
+          });
+        });
+      });
+    </script>
+
 {% endblock %}
+
+

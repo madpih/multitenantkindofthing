@@ -30,9 +30,29 @@
 
                     <div class="collapse navbar-collapse" id="header-menu">
                         <ul class="navbar-nav ms-auto">
+                            {% if is_granted('ROLE_ADMIN') %}
                             <li class="nav-item me-3">
                                 <a class="nav-link" href="{{ path('admin') }}">
-                                    Admin
+                                    Dashboard
+                                </a>
+                            </li>
+                            {% endif %}
+
+                            <li class="nav-item me-3">
+                                <a class="nav-link" href="{{ path('app_register') }}">
+                                    Register
+                                </a>
+                            </li>
+
+                            <li class="nav-item me-3">
+                                <a class="nav-link" href="{{ path('app_login') }}">
+                                   Login
+                                </a>
+                            </li>
+
+                            <li class="nav-item me-3">
+                                <a class="nav-link" href="{{ path('app_logout') }}">
+                                    Logout
                                 </a>
                             </li>
 

@@ -26,7 +26,12 @@ doctrine:
                 alias: App
         controller_resolver:
             auto_mapping: false
-
+#        entity_managers:
+#            default:
+#                filters:
+#                    account_entity_filter:
+#                        class: App\Doctrine\AccountEntityFilter
+#                        enabled: true
 when@test:
     doctrine:
         dbal:

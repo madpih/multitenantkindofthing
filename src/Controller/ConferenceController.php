@@ -11,6 +11,7 @@ use App\Repository\CommentRepository;
 use App\Repository\ConferenceRepository;
 use App\Repository\TodoListRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,42 +21,61 @@ use Symfony\Component\Notifier\Notification\Notification;
 use Symfony\Component\Notifier\NotifierInterface;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
+use Symfony\Component\Security\Core\Exception\AccessDeniedException;
+
+class ConferenceController extends AbstractController {
+
+  public function __construct(
+    private EntityManagerInterface $entityManager,
+    private MessageBusInterface $bus,
+    private TodoListRepository $todoListRepository,
+  ) {}
+
+  #[Route('/')]
+  public function indexNoLocale(): Response {
+    return $this->redirectToRoute('homepage', ['_locale' => 'en']);
+  }
+
+  #[Route('/{_locale<%app.supported_locales%>}/', name: 'homepage')]
+  public function index(ConferenceRepository $conferenceRepository): Response {
+    return $this->render('conference/index.html.twig', [
+      'conferences' => $conferenceRepository->findAll(),
+    ])->setSharedMaxAge(0);
+  }
+
+  #[Route('/{_locale<%app.supported_locales%>}/conference_header', name: 'conference_header')]
+  public function conferenceHeader(ConferenceRepository $conferenceRepository): Response {
+    return $this->render('conference/header.html.twig', [
+      'conferences' => $conferenceRepository->findAll(),
+    ]);
+  }
 
 
-class ConferenceController extends AbstractController
+  #[Route('/conference/{id}/todo/{todoId}/remove', name: 'conference_todo_remove', methods: ['POST'])]
+  public function removeTodoItem(Request $request, $id, $todoId): Response
+  {
+    $todo = $this->todoListRepository->find($todoId);
+    $data = [];
+    if ($todo) {
+      $this->entityManager->remove($todo);
+      $this->entityManager->flush();
 
-{
-    public function __construct(
-      private EntityManagerInterface $entityManager,
-      private MessageBusInterface $bus,
-    ) {
-
+      $data = [
+        'status' => 'success',
+        'message' => 'Todo item removed successfully.'
+      ];
+    } else {
+      $data = [
+        'status' => 'error',
+        'message' => 'Todo item not found.'
+      ];
+      $responseCode = 404;
     }
 
-    #[Route('/')]
-    public function indexNoLocale(): Response
-    {
-     return $this->redirectToRoute('homepage', ['_locale' => 'en']);
-    }
+    return new Response(json_encode($data), $responseCode ?? 200, ['Content-Type' => 'application/json']);
+  }
 
-    #[Route('/{_locale<%app.supported_locales%>}/', name: 'homepage')]
-    public function index(ConferenceRepository $conferenceRepository): Response
-    {
-      return $this->render('conference/index.html.twig', [
-        'conferences' => $conferenceRepository->findAll(),
-      ])->setSharedMaxAge(0);
-
-    }
-
-    #[Route('/{_locale<%app.supported_locales%>}/conference_header', name: 'conference_header')]
-    public function conferenceHeader(ConferenceRepository $conferenceRepository): Response
-    {
-      return $this->render('conference/header.html.twig', [
-        'conferences' => $conferenceRepository->findAll(),
-      ]);
-    }
-
-    #[Route('/{_locale<%app.supported_locales%>}/conference/{slug}', name: 'conference')]
+  #[Route('/{_locale<%app.supported_locales%>}/conference/{slug}', name: 'conference')]
     public function show(
       Request $request,
       string $slug,
@@ -75,9 +95,7 @@ class ConferenceController extends AbstractController
         $todo->setConference($conference);
         $this->entityManager->persist($todo);
         $this->entityManager->flush();
-
         return $this->redirectToRoute('conference', ['slug' => $conference->getSlug()]);
-
       }
 
       $comment = new Comment();
@@ -90,7 +108,6 @@ class ConferenceController extends AbstractController
           $photo->move($photoDir, $filename);
           $comment->setPhotoFilename($filename);
         }
-
 
         $this->entityManager->persist($comment);
         $this->entityManager->flush();

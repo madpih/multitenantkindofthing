@@ -79,7 +79,7 @@ class TodoList
         return $this->isCompleted;
     }
 
-    public function setCompleted(bool $isCompleted): static
+    public function setIsCompleted(bool $isCompleted): static
     {
         $this->isCompleted = $isCompleted;
 

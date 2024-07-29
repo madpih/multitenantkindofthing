@@ -36,11 +36,9 @@ class TodoListCrudController extends AbstractCrudController
 
     public function configureFields(string $pageName): iterable
     {
-
       yield AssociationField::new('conference');
-
       yield TextField::new('Task');
       yield TextAreaField::new('description');
-      yield BooleanField::new('Completed');
+      yield BooleanField::new('isCompleted');
     }
 }

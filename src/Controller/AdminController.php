@@ -27,31 +27,6 @@ class AdminController extends AbstractController
   ) {
   }
 
-//  #[Route('/admin/comment/review/{id}', name: 'review_comment')]
-//  public function reviewComment(Request $request, Comment $comment, WorkflowInterface $commentStateMachine): Response
-//   {
-//     $accepted = !$request->query->get('rejected');
-//
-//     if ($commentStateMachine->can($comment, 'publish')) {
-//       $transition = $accepted ? 'publish' : 'reject';
-//     } elseif ($commentStateMachine->can($comment, 'publish_ham')) {
-//       $transition = $accepted ? 'publish_ham' : 'reject_ham';
-//     } else {
-//       return new Response('Comment already reviewed or not in the right state.');
-//     }
-//
-//     $commentStateMachine->apply($comment, $transition);
-//     $this->entityManager->flush();
-//
-//     if ($accepted) {
-//       $this->bus->dispatch(new CommentMessage($comment->getId()));
-//     }
-//      return new Response($this->twig->render('admin/review.html.twig', [
-//        'transition' => $transition,
-//        'comment' => $comment,
-//      ]));
-//   }
-
   #[Route('/comment/review/{id}', name: 'review_comment')]
   public function reviewComment(Request $request, Comment $comment, WorkflowInterface $commentStateMachine): Response
   {
@@ -104,4 +79,6 @@ class AdminController extends AbstractController
 
     return new Response('Done');
   }
+
+
 }
