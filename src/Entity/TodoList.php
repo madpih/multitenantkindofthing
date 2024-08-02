@@ -8,7 +8,7 @@ use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: TodoListRepository::class)]
 #[ORM\HasLifecycleCallbacks]
-class TodoList
+class TodoList implements AccountEntityAwareInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -27,6 +27,9 @@ class TodoList
 
   #[ORM\Column(options: ["default" => false])]
   private ?bool $isCompleted = null;
+
+  #[ORM\ManyToOne(inversedBy: 'todolist')]
+  private ?AccountEntity $accountEntity = null;
 
   public function __toString(): string
   {
@@ -89,5 +92,17 @@ class TodoList
     #[ORM\PrePersist]
     public function setCompletedValue() {
       $this->isCompleted = false;
+    }
+
+    public function getAccountEntity(): ?AccountEntity
+    {
+        return $this->accountEntity;
+    }
+
+    public function setAccountEntity(?AccountEntity $accountEntity): static
+    {
+        $this->accountEntity = $accountEntity;
+
+        return $this;
     }
 }

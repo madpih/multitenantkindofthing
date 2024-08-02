@@ -23,7 +23,8 @@ use Symfony\Component\String\Slugger\SluggerInterface;
   order: ['year' => 'DESC', 'city' => 'ASC'],
   paginationEnabled: false,
 )]
-class Conference {
+class Conference implements AccountEntityAwareInterface
+{
 
   #[ORM\Id]
   #[ORM\GeneratedValue]
@@ -58,6 +59,9 @@ class Conference {
    */
   #[ORM\OneToMany(targetEntity: TodoList::class, mappedBy: 'conference', orphanRemoval: TRUE)]
   private Collection $todolist;
+
+  #[ORM\ManyToOne(inversedBy: 'conference')]
+  private ?AccountEntity $accountEntity = null;
 
   public function __construct() {
     $this->comments = new ArrayCollection();
@@ -149,6 +153,18 @@ class Conference {
    */
   public function getTodoList(): Collection {
     return $this->todolist;
+  }
+
+  public function getAccountEntity(): ?AccountEntity
+  {
+      return $this->accountEntity;
+  }
+
+  public function setAccountEntity(?AccountEntity $accountEntity): static
+  {
+      $this->accountEntity = $accountEntity;
+
+      return $this;
   }
 
 }

@@ -41,9 +41,9 @@ class AccountEntitySubscriber implements EventSubscriber
   private function applyFilter()
   {
     $user = $this->security->getUser();
-    if ($user && method_exists($user, 'getAccountEntityId')) {
+    if ($user && method_exists($user, 'getAccountEntity')) {
       $filter = $this->entityManager->getFilters()->enable('account_entity_filter');
-      $filter->setParameter('account_entity_id', $user->getAccountEntityId());
+      $filter->setParameter('account_entity_id', $user->getAccountEntity());
     }
   }
 }

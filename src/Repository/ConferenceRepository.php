@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\AccountEntity;
 use App\Entity\Conference;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -21,38 +22,26 @@ class ConferenceRepository extends ServiceEntityRepository
       return $this->findby([], ['year' => 'ASC', 'city' => 'ASC']);
     }
 
-  public function findOneBySlug(string $slug): ?Conference
+  public function findOneBySlug(string $slug,AccountEntity $accountEntity): ?Conference
   {
+
     return $this->createQueryBuilder('c')
       ->andWhere('c.slug = :slug')
+      ->andWhere('c.accountEntity = :accountEntity')
       ->setParameter('slug', $slug)
+      ->setParameter('accountEntity', $accountEntity)
       ->getQuery()
       ->getOneOrNullResult();
   }
 
+//  public function findByAccountEntity(AccountEntity $accountEntity): array
+//  {
+//    return $this->createQueryBuilder('c')
+//      ->andWhere('c.accountEntity = :accountEntity')
+//      ->setParameter('accountEntity', $accountEntity)
+//      ->orderBy('c.year', 'ASC') // Adjust ordering as needed
+//      ->getQuery()
+//      ->getResult();
+//  }
 
-  //    /**
-//     * @return Conference[] Returns an array of Conference objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('c.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?Conference
-//    {
-//        return $this->createQueryBuilder('c')
-//            ->andWhere('c.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
 }

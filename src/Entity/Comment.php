@@ -24,7 +24,7 @@ use Symfony\Component\Validator\Constraints as Assert;
   paginationEnabled: false,
 )]
 #[ApiFilter(SearchFilter::class, properties: ['conference' => 'exact'])]
-class Comment
+class Comment implements AccountEntityAwareInterface
 {
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -62,6 +62,9 @@ class Comment
 
     #[ORM\Column(length: 255, options:['default'=> 'submitted'])]
     private ?string $state = 'submitted';
+
+    #[ORM\ManyToOne(inversedBy: 'comment')]
+    private ?AccountEntity $accountEntity = null;
 
       public function __toString(): string
     {
@@ -161,6 +164,18 @@ class Comment
     public function setState(string $state): static
     {
         $this->state = $state;
+
+        return $this;
+    }
+
+    public function getAccountEntity(): ?AccountEntity
+    {
+        return $this->accountEntity;
+    }
+
+    public function setAccountEntity(?AccountEntity $accountEntity): static
+    {
+        $this->accountEntity = $accountEntity;
 
         return $this;
     }

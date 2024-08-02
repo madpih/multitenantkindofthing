@@ -5,22 +5,35 @@ namespace App\Controller\Admin;
 use App\Entity\Comment;
 use App\Entity\Conference;
 use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Action;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Actions;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Crud;
 use EasyCorp\Bundle\EasyAdminBundle\Config\Filters;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\DateTimeField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ImageField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextareaField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
 use EasyCorp\Bundle\EasyAdminBundle\Filter\EntityFilter;
+use Symfony\Bundle\SecurityBundle\Security;
 
 class CommentCrudController extends AbstractCrudController
 {
 
-  public function __construct(private readonly EntityManagerInterface $entityManager) {}
+  private Security $security;
+  private EntityManagerInterface $entityManager;
+
+  public function __construct(Security $security, EntityManagerInterface $entityManager)
+  {
+    $this->security = $security;
+    $this->entityManager = $entityManager;
+  }
 
   public static function getEntityFqcn(): string
   {
@@ -77,6 +90,25 @@ class CommentCrudController extends AbstractCrudController
 
     }
 
+  }
+
+  public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
+  {
+    $user = $this->getUser();
+
+    // If the user has ROLE_SUPER_ADMIN, return all entities
+    if ($this->security->isGranted('ROLE_SUPER_ADMIN')) {
+      return $this->entityManager->createQueryBuilder()
+        ->select('entity')
+        ->from(Comment::class, 'entity');
+    }
+
+    // Otherwise, filter by the user's account entity
+    return $this->entityManager->createQueryBuilder()
+      ->select('entity')
+      ->from(Comment::class, 'entity')
+      ->where('entity.accountEntity = :accountEntity')
+      ->setParameter('accountEntity', $user->getAccountEntity());
   }
 
 }

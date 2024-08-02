@@ -3,12 +3,21 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Admin;
+use App\Repository\AdminRepository;
+use Doctrine\ORM\QueryBuilder;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FieldCollection;
+use EasyCorp\Bundle\EasyAdminBundle\Collection\FilterCollection;
 use EasyCorp\Bundle\EasyAdminBundle\Controller\AbstractCrudController;
+use EasyCorp\Bundle\EasyAdminBundle\Dto\SearchDto;
 use EasyCorp\Bundle\EasyAdminBundle\Field\AssociationField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\BooleanField;
 use EasyCorp\Bundle\EasyAdminBundle\Field\ChoiceField;
-use EasyCorp\Bundle\EasyAdminBundle\Config\{Action, Actions, Crud, KeyValueStore};
+use EasyCorp\Bundle\EasyAdminBundle\Config\{Action,
+  Actions,
+  Crud,
+  KeyValueStore};
 use EasyCorp\Bundle\EasyAdminBundle\Field\TextField;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\RepeatedType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -16,12 +25,22 @@ use Symfony\Component\Form\FormEvents;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use EasyCorp\Bundle\EasyAdminBundle\Dto\EntityDto;
 use EasyCorp\Bundle\EasyAdminBundle\Context\AdminContext;
+use Symfony\Component\Security\Core\Authorization\AuthorizationCheckerInterface;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class AdminCrudController extends AbstractCrudController
 {
     public function __construct(
-    public UserPasswordHasherInterface $userPasswordHasher
-  ) {}
+    public UserPasswordHasherInterface $userPasswordHasher,
+    AdminRepository $adminRepository, Security $security,
+    AuthorizationCheckerInterface $authorizationChecker
+
+  ) {
+      $this->userPasswordHasher = $userPasswordHasher;
+      $this->adminRepository = $adminRepository;
+      $this->security = $security;
+      $this->authorizationChecker = $authorizationChecker;
+    }
     public static function getEntityFqcn(): string
     {
         return Admin::class;
@@ -40,11 +59,17 @@ class AdminCrudController extends AbstractCrudController
     {
         yield AssociationField::new('accountEntity');
         yield TextField::new('username');
+
+        $rolesChoices = [
+        'Admin' => 'ROLE_ADMIN',
+        'User' => 'ROLE_USER',
+         ] ;
+        $user = $this->getUser();
+        if ($user instanceof UserInterface && $this->authorizationChecker->isGranted('ROLE_SUPER_ADMIN') && $user->getAccountEntity()->getName() === 'Default Account') {
+          $rolesChoices['Super Admin'] = 'ROLE_SUPER_ADMIN';
+        }
         yield ChoiceField::new('roles')
-          ->setChoices([
-            'Admin' => 'ROLE_ADMIN',
-            'User' => 'ROLE_USER',
-          ])
+          ->setChoices($rolesChoices)
           ->allowMultipleChoices();
         yield TextField::new('password')
           ->setFormType(RepeatedType::class)
@@ -95,9 +120,41 @@ class AdminCrudController extends AbstractCrudController
   public function createEntity(string $entityFqcn)
   {
     $admin = new Admin();
-    $admin->setRoles(['ROLE_USER']); // Set default roles
+
+    // Set default roles conditionally
+    if (!$this->security->isGranted('ROLE_SUPER_ADMIN')) {
+      $admin->setRoles(['ROLE_USER']); // Set default roles for non-superuser
+    }
 
     return $admin;
+  }
+
+  public function configureCrud(Crud $crud): Crud
+  {
+    return $crud
+      ->setEntityLabelInSingular('User')
+      ->setEntityLabelInPlural('Users')
+      ->setDefaultSort(['id' => 'DESC'])
+      ->setSearchFields(['username', 'email'])
+      ->setPaginatorPageSize(30);
+//      ->setEntityPermission('ROLE_SUPER_ADMIN');
+  }
+
+  public function createIndexQueryBuilder(SearchDto $searchDto, EntityDto $entityDto, FieldCollection $fields, FilterCollection $filters): QueryBuilder
+  {
+    $user = $this->getUser();
+
+    // If the user has ROLE_SUPER_ADMIN, return all entities
+    if ($this->security->isGranted('ROLE_SUPER_ADMIN')) {
+      return $this->adminRepository->createQueryBuilder('entity');
+    }
+
+    // Otherwise, filter by the user's account entity
+//    $accountEntity = $user->getAccountEntity();
+
+    return $this->adminRepository->createQueryBuilder('entity')
+      ->where('entity.accountEntity = :accountEntity')
+      ->setParameter('accountEntity', $user->getAccountEntity());
   }
 
 }

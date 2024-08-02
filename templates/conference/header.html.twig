@@ -1,5 +1,9 @@
-{% for conference in conferences %}
-    <a class="nav-conference" href="{{ path('conference', { slug: conference.slug }) }}">
-        {{ conference }}
-    </a>
+{% if app.user %}
+    {% for conference in conferences %}
+        <a class="nav-conference" href="{{ path('conference', { slug: conference.slug }) }}">
+            {{ conference }}
+        </a>
     {% endfor %}
+{% else %}
+    <p>Please <a href="{{ path('app_login') }}">log in</a> to view available conferences.</p>
+{% endif %}
